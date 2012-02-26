@@ -28,6 +28,8 @@ bool edgesOn = false;
 bool transformOn = false;
 bool inverseOn = false;
 
+int circleFilter = 0;
+
 long FAR PASCAL cam01WndProc(HWND hwnd, UINT message, WPARAM wParam, LONG lParam)
 {
     HDC hdc; 
@@ -102,6 +104,20 @@ long FAR PASCAL cam01WndProc(HWND hwnd, UINT message, WPARAM wParam, LONG lParam
 			else
 			{
 				inverseOn = true;
+				transformOn = true;
+				edgesOn = true;
+			}
+		}
+		if (wParam == 0x46)
+		{
+			if (circleFilter == 2)
+			{
+				circleFilter = 0;
+				ClearWindowArea(hwnd, 3);
+			}
+			else
+			{
+				circleFilter++;
 				transformOn = true;
 				edgesOn = true;
 			}

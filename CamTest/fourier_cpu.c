@@ -218,3 +218,39 @@ void FourierTransformCPU(BITMAPINFO *bmpInfo, void *bmpData, bool inverse, doubl
 	free(edgeImage.data);      /* Finished with edgeImage.data */
 	free(originalImage.data);  /* Finished with originalImage.data */
 }
+
+void ApplyCircleFilterCPU(BITMAPINFO *bmpInfo, void *bmpData, int radius, bool inverse)
+{
+	int width = (*bmpInfo).bmiHeader.biWidth;
+	int height = (*bmpInfo).bmiHeader.biHeight;
+
+	int centerX = width/2;
+	int centerY = height/2;
+	int i = 0, j = 0;
+
+	for (i = 0; i < width; i++)
+	{
+		for (j = 0; j < height; j++)
+		{
+			int distance = sqrt(pow(i - centerX, 2.0) + pow(j - centerY, 2.0));
+			if (inverse)
+			{
+				if (distance <= radius)
+				{
+					*(((unsigned char *)bmpData) + i * 3 + j * width * 3) = 0;
+					*(((unsigned char *)bmpData) + i * 3 + j * width * 3 + 1) = 0;
+					*(((unsigned char *)bmpData) + i * 3 + j * width * 3 + 2) = 0;
+				}
+			}
+			else
+			{
+				if (distance > radius)
+				{
+					*(((unsigned char *)bmpData) + i * 3 + j * width * 3) = 0;
+					*(((unsigned char *)bmpData) + i * 3 + j * width * 3 + 1) = 0;
+					*(((unsigned char *)bmpData) + i * 3 + j * width * 3 + 2) = 0;
+				}
+			}
+		}
+	}
+}

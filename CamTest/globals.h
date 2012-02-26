@@ -14,5 +14,7 @@ extern bool edgesOn;
 extern bool transformOn;
 extern bool inverseOn;
 
+extern int circleFilter;
+
 #endif
  

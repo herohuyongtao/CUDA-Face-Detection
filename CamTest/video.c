@@ -202,6 +202,8 @@ LRESULT CALLBACK capVideoStreamCallback(HWND hWnd, LPVIDEOHDR lpVHdr)
 					DetectEdgesCpu(pVidFormat, pAuxCpu);
 				if (transformOn)
 					FourierTransformCPU(pVidFormat, pAuxCpu, false, &FIm[0][0][0]);
+				if (circleFilter > 0)
+					ApplyCircleFilterCPU(pVidFormat, pAuxCpu, 50, circleFilter == 2);
 				if (inverseOn)
 					FourierTransformCPU(pVidFormat, pAuxCpu, true, &FIm[0][0][0]);
 				tempoCPU = clock();
@@ -228,6 +230,8 @@ LRESULT CALLBACK capVideoStreamCallback(HWND hWnd, LPVIDEOHDR lpVHdr)
 					DetectEdgesMultiCpu(pVidFormat, pAuxMultiCpu);
 				if (transformOn)
 					FourierTransformMultiCPU(pVidFormat, pAuxMultiCpu, false, &FIm[0][0][0]);
+				if (circleFilter > 0)
+					ApplyCircleFilterMultiCpu(pVidFormat, pAuxMultiCpu, 50, circleFilter == 2);
 				if (inverseOn)
 					FourierTransformMultiCPU(pVidFormat, pAuxMultiCpu, true, &FIm[0][0][0]);
 				tempoMULTICPU = clock();
@@ -250,6 +254,8 @@ LRESULT CALLBACK capVideoStreamCallback(HWND hWnd, LPVIDEOHDR lpVHdr)
 					DetectEdgesGPU(pVidFormat, pAuxGpu);
 				if (transformOn)
 					FourierTransformGPU(pVidFormat, pAuxGpu, false, fFIm);
+				if (circleFilter > 0)
+					ApplyCircleFilterGPU(pVidFormat, pAuxGpu, 50, circleFilter == 2);
 				if (inverseOn)
 					FourierTransformGPU(pVidFormat, pAuxGpu, true, fFIm);
 				tempoGPU = clock();

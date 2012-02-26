@@ -211,3 +211,68 @@ void FourierTransformGPU(BITMAPINFO *bmpInfo, void *bmpData, bool inverse, float
 	cudaFree(dev_edgeImageSegment);
 	cudaFree(dev_originalImageSegment);
 }
+
+__global__ void CircleFilterKernel(void *bmpData, int radius, bool inverse, int chunkNumber, int chunkSize)
+{
+	int X = threadIdx.x + chunkNumber * chunkSize;
+	int Y = blockIdx.x;
+
+	if (X < N && Y < M)
+	{	
+		int centerX = N/2;
+		int centerY = M/2;
+
+		int distance = sqrt(pow(X - centerX, 2.0) + pow(Y - centerY, 2.0));
+		if (inverse)
+		{
+			if (distance <= radius)
+			{
+				*(((unsigned char *)bmpData) + X * 3 + Y * N * 3) = 0;
+				*(((unsigned char *)bmpData) + X * 3 + Y * N * 3 + 1) = 0;
+				*(((unsigned char *)bmpData) + X * 3 + Y * N * 3 + 2) = 0;
+			}
+		}
+		else
+		{
+			if (distance > radius)
+			{
+				*(((unsigned char *)bmpData) + X * 3 + Y * N * 3) = 0;
+				*(((unsigned char *)bmpData) + X * 3 + Y * N * 3 + 1) = 0;
+				*(((unsigned char *)bmpData) + X * 3 + Y * N * 3 + 2) = 0;
+			}
+		}
+	}
+}
+
+void ApplyCircleFilterGPU(BITMAPINFO *bmpInfo, void *bmpData, int radius, bool inverse)
+{
+	char message[255];
+	unsigned char 	*dev_originalImageSegment;
+	unsigned long	vectorSize, paddingSize, dataLength;
+	int numPadding, chunkSize, i, cont;
+	long size;
+
+	numPadding = N % 4;
+	dataLength = (*bmpInfo).bmiHeader.biSizeImage;
+	paddingSize = M * numPadding;
+	vectorSize = (dataLength - paddingSize);
+	chunkSize = 320;
+	int numChunks = (N + chunkSize - 1)/ chunkSize;
+
+	dim3 dgrid (M, 1, 1);
+	dim3 dblock (chunkSize, 1, 1);
+
+   	cudaMalloc((void**)&dev_originalImageSegment, vectorSize*sizeof(unsigned char));
+	
+	cudaMemcpy(dev_originalImageSegment, bmpData, vectorSize*sizeof(unsigned char), cudaMemcpyHostToDevice);
+	
+	for (int i = 0; i < numChunks; i++)
+	{
+		CircleFilterKernel<<<dgrid, dblock>>>(dev_originalImageSegment, radius, inverse, i, chunkSize);
+		cudaThreadSynchronize();
+	}
+	cudaMemcpy(bmpData, dev_originalImageSegment, vectorSize * sizeof(unsigned char), cudaMemcpyDeviceToHost);
+	
+	cudaFree(dev_originalImageSegment);
+}
+
